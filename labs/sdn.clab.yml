@@ -1,0 +1,39 @@
+# Demo 1: two Open vSwitch bridges (s1, s2) joined by a patch cable, three hosts.
+#
+#   h1 (10.0.0.1) ─┐                 ┌─ h3 (10.0.0.3)
+#                  s1 ══ patch ══ s2
+#   h2 (10.0.0.2) ─┘  (web server on :80)
+#
+# s1/s2 are created by scripts/bridges.sh (containerlab's ovs-bridge kind needs them to exist).
+name: sdn
+mgmt:
+  network: clab
+  ipv4-subnet: 172.20.20.0/24
+topology:
+  nodes:
+    s1:
+      kind: ovs-bridge
+    s2:
+      kind: ovs-bridge
+    h1:
+      kind: linux
+      image: wbitt/network-multitool:latest   # multi-arch; has ping, curl, and nginx on :80
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.0.0.1/24 dev eth1
+    h2:
+      kind: linux
+      image: wbitt/network-multitool:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.0.0.2/24 dev eth1
+    h3:
+      kind: linux
+      image: wbitt/network-multitool:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.0.0.3/24 dev eth1
+  links:
+    - endpoints: ["h1:eth1", "s1:s1-h1"]
+    - endpoints: ["h2:eth1", "s1:s1-h2"]
+    - endpoints: ["h3:eth1", "s2:s2-h3"]

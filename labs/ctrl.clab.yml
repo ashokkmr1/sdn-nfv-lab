@@ -1,0 +1,22 @@
+# Controllers. Deploy this lab FIRST and leave it running: ONOS needs a few
+# minutes to start (amd64 image under Rosetta on Apple Silicon).
+#   sudo containerlab deploy -t labs/ctrl.clab.yml
+name: ctrl
+mgmt:
+  network: clab                 # shared management network (172.20.20.0/24) used by all three labs
+  ipv4-subnet: 172.20.20.0/24
+topology:
+  nodes:
+    onos:                       # primary controller: GUI + REST + reactive forwarding
+      kind: linux
+      image: onosproject/onos:2.7-latest
+      mgmt-ipv4: 172.20.20.20
+      env:
+        ONOS_APPS: drivers,openflow,gui2,fwd
+      ports:
+        - 8181:8181             # GUI + REST  -> http://localhost:8181/onos/ui  (onos / rocks)
+        - 8101:8101             # Karaf CLI   -> ssh -p 8101 karaf@localhost   (karaf / karaf)
+    osken:                      # backup controller: tiny Python learning switch (native arm64)
+      kind: linux
+      image: osken:local
+      mgmt-ipv4: 172.20.20.10

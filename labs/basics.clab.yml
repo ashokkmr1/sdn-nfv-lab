@@ -1,0 +1,24 @@
+# Moment 1: two Linux hosts and one cable. No switch, no router: for two machines a cable is enough.
+#
+#   pc1 (10.9.0.1) ──────── pc2 (10.9.0.2)
+#
+name: basics
+mgmt:
+  network: clab
+  ipv4-subnet: 172.20.20.0/24
+topology:
+  nodes:
+    pc1:
+      kind: linux
+      image: wbitt/network-multitool:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.9.0.1/24 dev eth1
+    pc2:
+      kind: linux
+      image: wbitt/network-multitool:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.9.0.2/24 dev eth1
+  links:
+    - endpoints: ["pc1:eth1", "pc2:eth1"]

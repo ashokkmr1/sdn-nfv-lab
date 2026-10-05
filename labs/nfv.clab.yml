@@ -1,0 +1,45 @@
+# Demo 2: a firewall VNF inserted into the traffic path purely with OpenFlow rules.
+#
+#   client (10.1.0.1) ──┐               ┌── web (10.1.0.2, nginx :80)
+#                       └── br-nfv ─────┘
+#                           │    │    │
+#                        fwin  fwout  ids (mirror, optional)
+#                           └─ fw ─┘   (transparent L2 firewall container = the VNF)
+#
+# br-nfv is created by scripts/bridges.sh. No controller: we steer traffic by hand.
+name: nfv
+mgmt:
+  network: clab
+  ipv4-subnet: 172.20.20.0/24
+topology:
+  nodes:
+    br-nfv:
+      kind: ovs-bridge
+    client:
+      kind: linux
+      image: wbitt/network-multitool:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.1.0.1/24 dev eth1
+    web:
+      kind: linux
+      image: wbitt/network-multitool:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+        - ip addr add 10.1.0.2/24 dev eth1
+    fw:
+      kind: linux
+      image: vnf-fw:local
+      exec:
+        - /fw.sh up                  # bridge eth1<->eth2 and install "drop tcp/80"
+    ids:
+      kind: linux
+      image: nicolaka/netshoot:latest
+      exec:
+        - sysctl -qw net.ipv6.conf.all.disable_ipv6=1
+  links:
+    - endpoints: ["client:eth1", "br-nfv:nfv-client"]
+    - endpoints: ["web:eth1", "br-nfv:nfv-web"]
+    - endpoints: ["fw:eth1", "br-nfv:nfv-fwin"]
+    - endpoints: ["fw:eth2", "br-nfv:nfv-fwout"]
+    - endpoints: ["ids:eth1", "br-nfv:nfv-ids"]

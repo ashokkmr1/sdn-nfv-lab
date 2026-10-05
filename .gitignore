@@ -1,0 +1,3 @@
+# containerlab runtime directories
+labs/clab-*/
+.DS_Store
